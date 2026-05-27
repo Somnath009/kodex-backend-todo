@@ -23,11 +23,15 @@ app.post("/api/notes", async (req, res) => {
     }
 
     if (title.trim().length < 3) {
-        return res.status(400).json({ error: "Title must be at least 3 characters long" });
+        return res
+            .status(400)
+            .json({ error: "Title must be at least 3 characters long" });
     }
 
     if (description.trim().length < 10) {
-        return res.status(400).json({ error: "Description must be at least 10 characters long" });
+        return res
+            .status(400)
+            .json({ error: "Description must be at least 10 characters long" });
     }
 
     // ---- If validation passes, create the note ----
@@ -36,9 +40,9 @@ app.post("/api/notes", async (req, res) => {
 
     return res.status(201).json({
         message: "Note created successfully",
-        newNote
+        newNote,
     });
-})
+});
 
 /**
  * @route GET /api/notes
@@ -46,16 +50,51 @@ app.post("/api/notes", async (req, res) => {
  * @access Public
  */
 app.get("/api/notes", async (req, res) => {
-
     const notes = await noteModel.find();
 
     return res.status(200).json({
         message: "Notes fetched successfully",
-        notes
+        notes,
     });
+});
 
-})
+/**
+ * @route PATCH /api/notes/:id
+ * @description Update a note by id require description in the request body
+ * @access Public
+ */
 
+app.patch("/api/notes/:id", async (req, res) => {
+    const { id } = req.params;
+    const { description } = req.body;
 
+    // ---- Validation ----
+
+    if (!description) {
+        return res.status(400).json({ error: "Description is required" });
+    }
+
+    if (description.trim().length < 10) {
+        return res
+            .status(400)
+            .json({ error: "Description must be at least 10 characters long" });
+    }
+
+    // ---- If validation passes, update the note ----
+
+    const note = await noteModel.findById(id);
+
+    if (!note) {
+        return res.status(404).json({ error: "Note not found" });
+    }
+
+    note.description = description;
+    await note.save();
+
+    return res.status(200).json({
+        message: "Note updated successfully",
+        note,
+    });
+});
 
 export default app;
